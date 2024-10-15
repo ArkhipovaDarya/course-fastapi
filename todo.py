@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Path
-from models import Todo, TodoItem
+from fastapi import APIRouter, Path, HTTPException, status
+from models import Todo, TodoItem, TodoItems
 
 todo_router = APIRouter()
 todo_list = []
@@ -11,7 +11,7 @@ async def add_todo(todo: Todo) -> dict:
     return {"message": "Successfully added"}
 
 
-@todo_router.get("/todo")
+@todo_router.get("/todo", response_model=TodoItems)
 async def get_todo() -> dict:
     return {"todo": todo_list}
 
@@ -21,7 +21,10 @@ async def get_this_todo(todo_id: int = Path(..., title="The ID of the todo to re
     for todo in todo_list:
         if todo.id == todo_id:
             return {"todo": todo}
-    return {"message": "Not found"}
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo does not exist"
+    )
 
 
 @todo_router.put("/todo/{todo_id}")
@@ -30,7 +33,10 @@ async def update_todo(todo_item: TodoItem, todo_id: int = Path(..., title="The I
         if todo.id == todo_id:
             todo.item = todo_item.item
             return {"message": "Successfully updated"}
-    return {"message": "Not found"}
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo does not exist"
+    )
 
 
 @todo_router.delete("/todo/{todo_id}")
@@ -40,7 +46,10 @@ async def delete_this_todo(todo_id: int) -> dict:
         if todo.id == todo_id:
             todo_list.pop(index)
             return {"message": "Successfully deleted"}
-    return {"message": "Not found"}
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo does not exist"
+    )
 
 
 @todo_router.delete("/todo")
